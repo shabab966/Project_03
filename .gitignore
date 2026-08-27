@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment files (keep .env.example, exclude real .env)
+.env
+.env.local
+.env.production
+
+# SQLite database (dev only)
+prisma/dev.db
+prisma/dev.db-journal
+
+# Prisma generated client
+# (will be regenerated via prisma generate on install)
+# node_modules/@prisma/client
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Uploads directory (user-uploaded files)
+public/uploads/
+
+# TypeScript cache
+*.tsbuildinfo
+next-env.d.ts

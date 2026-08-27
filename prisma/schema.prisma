@@ -1,0 +1,229 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  logoUrl      String?
+  contactEmail String?
+  contactPhone String?
+  address      String?
+  settingsJson String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  departments       Department[]
+  users             User[]
+  categories        MemoCategory[]
+  workflowTemplates WorkflowTemplate[]
+  memos             Memo[]
+  delegations       Delegation[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+}
+
+model Department {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  code           String
+  description    String?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  users User[]
+  memos Memo[]
+}
+
+model User {
+  id             String        @id @default(cuid())
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  departmentId   String?
+  department     Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  name           String
+  email          String        @unique
+  passwordHash   String
+  designation    String
+  role           String        @default("USER") // "ADMIN" | "USER"
+  status         String        @default("ACTIVE") // "ACTIVE" | "INACTIVE"
+  avatarUrl      String?
+  signatureUrl   String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  memosAuthored       Memo[]           @relation("MemoAuthor")
+  assignedSteps       WorkflowStep[]   @relation("AssignedUser")
+  actedSteps          WorkflowStep[]   @relation("ActedUser")
+  comments            MemoComment[]
+  attachmentsUploaded MemoAttachment[]
+  delegationsMade     Delegation[]     @relation("Delegator")
+  delegationsReceived Delegation[]     @relation("Delegate")
+  notifications       Notification[]
+  auditLogs           AuditLog[]
+}
+
+model MemoCategory {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  memos Memo[]
+}
+
+model WorkflowTemplate {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  stepsJson      String // Array of { stepOrder, title, stepType, defaultRole }
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Memo {
+  id                String        @id @default(cuid())
+  organizationId    String
+  organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  referenceNumber   String        @unique
+  title             String
+  body              String
+  richTextHtml      String?
+  authorId          String
+  author            User          @relation("MemoAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  departmentId      String?
+  department        Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  categoryId        String?
+  category          MemoCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  priority          String        @default("NORMAL") // "NORMAL" | "HIGH" | "URGENT"
+  status            String        @default("DRAFT") // "DRAFT" | "SUBMITTED" | "PENDING_REVIEW" | "PENDING_APPROVAL" | "CHANGES_REQUESTED" | "REJECTED" | "APPROVED" | "CANCELLED"
+  currentStepIndex  Int           @default(0)
+  currentAssigneeId String?
+  submittedAt       DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  steps         WorkflowStep[]
+  versions      MemoVersion[]
+  comments      MemoComment[]
+  attachments   MemoAttachment[]
+  notifications Notification[]
+}
+
+model MemoVersion {
+  id            String   @id @default(cuid())
+  memoId        String
+  memo          Memo     @relation(fields: [memoId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  title         String
+  body          String
+  richTextHtml  String?
+  authorId      String
+  changeSummary String?
+  createdAt     DateTime @default(now())
+}
+
+model WorkflowStep {
+  id              String    @id @default(cuid())
+  memoId          String
+  memo            Memo      @relation(fields: [memoId], references: [id], onDelete: Cascade)
+  stepOrder       Int
+  stepType        String    @default("APPROVAL") // "REVIEW" | "APPROVAL"
+  assignedUserId  String
+  assignedUser    User      @relation("AssignedUser", fields: [assignedUserId], references: [id], onDelete: Cascade)
+  status          String    @default("PENDING") // "PENDING" | "IN_PROGRESS" | "APPROVED" | "REJECTED" | "CHANGES_REQUESTED" | "SKIPPED"
+  actionTaken     String? // "APPROVED" | "REJECTED" | "CHANGES_REQUESTED" | "FORWARDED"
+  actionTimestamp DateTime?
+  comments        String?
+  actedByUserId   String?
+  actedByUser     User?     @relation("ActedUser", fields: [actedByUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model MemoComment {
+  id        String   @id @default(cuid())
+  memoId    String
+  memo      Memo     @relation(fields: [memoId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  type      String   @default("GENERAL") // "GENERAL" | "APPROVAL" | "REJECTION" | "CHANGES_REQUESTED" | "SYSTEM"
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model MemoAttachment {
+  id               String   @id @default(cuid())
+  memoId           String
+  memo             Memo     @relation(fields: [memoId], references: [id], onDelete: Cascade)
+  uploadedById     String
+  uploadedBy       User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  filename         String
+  originalFilename String
+  mimeType         String
+  sizeBytes        Int
+  filePath         String
+  createdAt        DateTime @default(now())
+}
+
+model Delegation {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  delegatorId    String
+  delegator      User         @relation("Delegator", fields: [delegatorId], references: [id], onDelete: Cascade)
+  delegateId     String
+  delegate       User         @relation("Delegate", fields: [delegateId], references: [id], onDelete: Cascade)
+  startDate      DateTime
+  endDate        DateTime
+  reason         String?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Notification {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memoId         String?
+  memo           Memo?        @relation(fields: [memoId], references: [id], onDelete: Cascade)
+  title          String
+  message        String
+  type           String // "ACTION_REQUIRED" | "APPROVED" | "REJECTED" | "CHANGES_REQUESTED" | "COMMENT" | "ASSIGNED" | "COMPLETED" | "RESUBMITTED"
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+}
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action         String
+  entityType     String
+  entityId       String?
+  detailsJson    String?
+  ipAddress      String?
+  createdAt      DateTime     @default(now())
+}
