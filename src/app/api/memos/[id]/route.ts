@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthSession } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { enforceTenant } from '@/lib/tenant';
-import { isUserAuthorizedForStep } from '@/lib/workflow';
-import { logAuditEvent } from '@/lib/audit';
+import { getAuthSession } from '../../../../lib/auth';
+import { db } from '../../../../lib/db';
+import { enforceTenant } from '../../../../lib/tenant';
+import { isUserAuthorizedForStep } from '../../../../lib/workflow';
+import { logAuditEvent } from '../../../../lib/audit';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {

@@ -10,7 +10,7 @@ import {
   Shield,
   User as UserIcon,
 } from 'lucide-react';
-import { formatDate, getInitials } from '@/lib/utils';
+import { formatDate, getInitials } from '../../lib/utils';
 
 export interface StepItem {
   id: string;

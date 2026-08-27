@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   User as UserIcon,
   Lock,
@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
-import { getInitials } from '@/lib/utils';
+import { getInitials } from '../../lib/utils';
 
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth();

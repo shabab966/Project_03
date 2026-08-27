@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthSession } from '@/lib/auth';
-import { enforceTenant } from '@/lib/tenant';
-import { executeWorkflowAction } from '@/lib/workflow';
+import { getAuthSession } from '../../../../../lib/auth';
+import { enforceTenant } from '../../../../../lib/tenant';
+import { executeWorkflowAction } from '../../../../../lib/workflow';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {

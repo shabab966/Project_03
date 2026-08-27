@@ -12,7 +12,7 @@ import {
   Shield,
   FileCheck,
 } from 'lucide-react';
-import { formatDate, formatTimeAgo, getInitials } from '@/lib/utils';
+import { formatDate, formatTimeAgo, getInitials } from '../../lib/utils';
 
 export interface CommentItem {
   id: string;

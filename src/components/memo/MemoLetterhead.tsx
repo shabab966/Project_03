@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Building2, Calendar, FileText, Tag, AlertCircle } from 'lucide-react';
-import { formatDate, getPriorityBadgeClasses, getStatusBadgeClasses } from '@/lib/utils';
+import { formatDate, getPriorityBadgeClasses, getStatusBadgeClasses } from '../../lib/utils';
 
 interface MemoLetterheadProps {
   memo: {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import {
   CheckCircle,
   Search,
@@ -13,7 +13,7 @@ import {
   Download,
   Building2,
 } from 'lucide-react';
-import { formatDate, formatTimeAgo, getPriorityBadgeClasses, getStatusBadgeClasses } from '@/lib/utils';
+import { formatDate, formatTimeAgo, getPriorityBadgeClasses, getStatusBadgeClasses } from '../../../lib/utils';
 
 export default function CompletedMemosPage() {
   const { user } = useAuth();

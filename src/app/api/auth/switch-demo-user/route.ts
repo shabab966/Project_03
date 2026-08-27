@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { createSessionToken } from '@/lib/auth';
-import { logAuditEvent } from '@/lib/audit';
+import { db } from '../../../../lib/db';
+import { createSessionToken } from '../../../../lib/auth';
+import { logAuditEvent } from '../../../../lib/audit';
 
 export async function POST(req: NextRequest) {
   try {

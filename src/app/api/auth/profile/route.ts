@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthSession, hashPassword, comparePassword } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { logAuditEvent } from '@/lib/audit';
+import { getAuthSession, hashPassword, comparePassword } from '../../../../lib/auth';
+import { db } from '../../../../lib/db';
+import { logAuditEvent } from '../../../../lib/audit';
 
 export async function PUT(req: NextRequest) {
   try {

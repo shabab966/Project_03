@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthSession } from '@/lib/auth';
-import { logAuditEvent } from '@/lib/audit';
+import { getAuthSession } from '../../../../lib/auth';
+import { logAuditEvent } from '../../../../lib/audit';
 
 export async function POST(req: NextRequest) {
   try {

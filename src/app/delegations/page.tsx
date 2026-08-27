@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   UserCheck,
   Shield,
@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   Trash2,
 } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { formatDate } from '../../lib/utils';
 
 export default function DelegationsPage() {
   const { user } = useAuth();

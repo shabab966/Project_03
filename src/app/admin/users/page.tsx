@@ -13,7 +13,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from 'lucide-react';
-import { formatDate, getInitials } from '@/lib/utils';
+import { formatDate, getInitials } from '../../../lib/utils';
 
 export default function AdminUsersPage() {
   const { user } = useAuth();

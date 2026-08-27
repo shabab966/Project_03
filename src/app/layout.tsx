@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { AuthProvider } from '@/context/AuthContext';
-import AppLayout from '@/components/layout/AppLayout';
+import { AuthProvider } from '../context/AuthContext';
+import AppLayout from '../components/layout/AppLayout';
 
 export const metadata: Metadata = {
   title: 'Inter-Office Memo Management System | CSE226 NSU',

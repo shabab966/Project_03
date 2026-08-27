@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import {
   FileEdit,
   Trash2,
@@ -12,7 +12,7 @@ import {
   Tag,
   AlertCircle,
 } from 'lucide-react';
-import { formatDate, formatTimeAgo, getPriorityBadgeClasses } from '@/lib/utils';
+import { formatDate, formatTimeAgo, getPriorityBadgeClasses } from '../../../lib/utils';
 
 export default function DraftsPage() {
   const { user } = useAuth();

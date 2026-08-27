@@ -12,7 +12,7 @@ import {
   FileText,
   User,
 } from 'lucide-react';
-import { formatDate, formatTimeAgo } from '@/lib/utils';
+import { formatDate, formatTimeAgo } from '../../../lib/utils';
 
 export default function AdminAuditLogsPage() {
   const { user } = useAuth();

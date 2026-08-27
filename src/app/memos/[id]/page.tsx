@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import {
   FileText,
   Clock,
@@ -22,13 +22,13 @@ import {
   Tag,
   User as UserIcon,
 } from 'lucide-react';
-import MemoLetterhead from '@/components/memo/MemoLetterhead';
-import WorkflowStepper from '@/components/workflow/WorkflowStepper';
-import WorkflowActionModal from '@/components/workflow/WorkflowActionModal';
-import MemoTimeline from '@/components/memo/MemoTimeline';
-import VersionHistoryModal from '@/components/memo/VersionHistoryModal';
-import PdfExportButton from '@/components/memo/PdfExportButton';
-import { formatDate, formatTimeAgo, getPriorityBadgeClasses, getStatusBadgeClasses } from '@/lib/utils';
+import MemoLetterhead from '../../../components/memo/MemoLetterhead';
+import WorkflowStepper from '../../../components/workflow/WorkflowStepper';
+import WorkflowActionModal from '../../../components/workflow/WorkflowActionModal';
+import MemoTimeline from '../../../components/memo/MemoTimeline';
+import VersionHistoryModal from '../../../components/memo/VersionHistoryModal';
+import PdfExportButton from '../../../components/memo/PdfExportButton';
+import { formatDate, formatTimeAgo, getPriorityBadgeClasses, getStatusBadgeClasses } from '../../../lib/utils';
 import Link from 'next/link';
 
 export default function MemoDetailPage() {

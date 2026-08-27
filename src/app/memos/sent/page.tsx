@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import {
   Send,
   Search,
@@ -14,7 +14,7 @@ import {
   ArrowRight,
   User,
 } from 'lucide-react';
-import { formatDate, formatTimeAgo, getPriorityBadgeClasses, getStatusBadgeClasses } from '@/lib/utils';
+import { formatDate, formatTimeAgo, getPriorityBadgeClasses, getStatusBadgeClasses } from '../../../lib/utils';
 
 export default function SentMemosPage() {
   const { user } = useAuth();

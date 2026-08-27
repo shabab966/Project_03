@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { X, History, FileText, Calendar, User } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { formatDate } from '../../lib/utils';
 
 export interface VersionItem {
   id: string;

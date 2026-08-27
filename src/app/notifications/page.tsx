@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Bell,
   CheckCircle2,
@@ -11,7 +11,7 @@ import {
   ArrowRight,
   CheckCheck,
 } from 'lucide-react';
-import { formatDate, formatTimeAgo } from '@/lib/utils';
+import { formatDate, formatTimeAgo } from '../../lib/utils';
 
 export default function NotificationsPage() {
   const { user } = useAuth();

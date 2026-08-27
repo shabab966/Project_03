@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthSession } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { enforceTenant } from '@/lib/tenant';
-import { logAuditEvent } from '@/lib/audit';
+import { getAuthSession } from '../../../../../lib/auth';
+import { db } from '../../../../../lib/db';
+import { enforceTenant } from '../../../../../lib/tenant';
+import { logAuditEvent } from '../../../../../lib/audit';
 import path from 'path';
 import fs from 'fs/promises';
 

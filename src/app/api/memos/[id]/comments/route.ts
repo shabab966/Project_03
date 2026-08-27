@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthSession } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { enforceTenant } from '@/lib/tenant';
-import { logAuditEvent } from '@/lib/audit';
-import { sendNotification, notifyManyUsers } from '@/lib/notifications';
+import { getAuthSession } from '../../../../../lib/auth';
+import { db } from '../../../../../lib/db';
+import { enforceTenant } from '../../../../../lib/tenant';
+import { logAuditEvent } from '../../../../../lib/audit';
+import { sendNotification, notifyManyUsers } from '../../../../../lib/notifications';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {

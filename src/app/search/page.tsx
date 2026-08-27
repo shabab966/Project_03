@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Search,
   Filter,
@@ -14,7 +14,7 @@ import {
   User,
   RotateCcw,
 } from 'lucide-react';
-import { formatDate, formatTimeAgo, getPriorityBadgeClasses, getStatusBadgeClasses } from '@/lib/utils';
+import { formatDate, formatTimeAgo, getPriorityBadgeClasses, getStatusBadgeClasses } from '../../lib/utils';
 
 export default function SearchPage() {
   const { user } = useAuth();

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Bell,
   Building2,
@@ -17,7 +17,7 @@ import {
   Users,
   Sparkles,
 } from 'lucide-react';
-import { formatTimeAgo, getInitials } from '@/lib/utils';
+import { formatTimeAgo, getInitials } from '../../lib/utils';
 
 export default function Navbar() {
   const { user, logout, demoOrgs, switchDemoUser } = useAuth();
