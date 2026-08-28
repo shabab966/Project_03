@@ -12,6 +12,11 @@ import {
   Lock,
   AlertCircle,
   CheckCircle2,
+  Copy,
+  Check,
+  ExternalLink,
+  ShieldCheck,
+  Clock,
 } from 'lucide-react';
 import { formatDate, getInitials } from '../../../lib/utils';
 
@@ -31,11 +36,17 @@ export default function AdminUsersPage() {
   const [departmentId, setDepartmentId] = useState('');
   const [role, setRole] = useState('USER');
   const [status, setStatus] = useState('ACTIVE');
+  const [emailVerified, setEmailVerified] = useState(true);
   const [sendInvite, setSendInvite] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [inviteSentMsg, setInviteSentMsg] = useState<string | null>(null);
-
+  const [createdInfo, setCreatedInfo] = useState<{
+    email: string;
+    activationUrl?: string | null;
+    emailDelivered?: boolean;
+    warning?: string | null;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const loadData = async () => {
     try {
@@ -65,9 +76,9 @@ export default function AdminUsersPage() {
     setDepartmentId(departments[0]?.id || '');
     setRole('USER');
     setStatus('ACTIVE');
+    setEmailVerified(true);
     setSendInvite(true);
     setError(null);
-    setInviteSentMsg(null);
     setShowModal(true);
   };
 
@@ -80,8 +91,24 @@ export default function AdminUsersPage() {
     setDepartmentId(u.department?.id || '');
     setRole(u.role);
     setStatus(u.status);
+    setEmailVerified(u.emailVerified ?? true);
     setError(null);
     setShowModal(true);
+  };
+
+  const handleQuickVerify = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailVerified: true }),
+      });
+      if (res.ok) {
+        loadData();
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,8 +132,9 @@ export default function AdminUsersPage() {
         payload.email = email.trim();
         payload.sendInvite = sendInvite;
         if (!sendInvite && password) payload.password = password;
-      } else if (password) {
-        payload.password = password;
+      } else {
+        payload.emailVerified = emailVerified;
+        if (password) payload.password = password;
       }
 
       const res = await fetch(url, {
@@ -123,9 +151,13 @@ export default function AdminUsersPage() {
       const data = await res.json();
       setShowModal(false);
 
-      if (data.inviteSent) {
-        setInviteSentMsg(`✅ Invite email sent to ${email.trim()}! They will set their own password.`);
-        setTimeout(() => setInviteSentMsg(null), 6000);
+      if (!editingUser && data.inviteSent) {
+        setCreatedInfo({
+          email: email.trim(),
+          activationUrl: data.activationUrl,
+          emailDelivered: data.emailDelivered,
+          warning: data.emailWarning,
+        });
       }
 
       loadData();
@@ -134,6 +166,12 @@ export default function AdminUsersPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
   };
 
   if (user?.role !== 'ADMIN') {
@@ -158,7 +196,7 @@ export default function AdminUsersPage() {
             <h1 className="text-xl font-black text-slate-900">User Directory & Roles</h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Manage user accounts, departmental affiliations, and administrator privileges for {user.organization.name}
+            Manage user accounts, departmental affiliations, and access credentials for {user.organization.name}
           </p>
         </div>
 
@@ -171,11 +209,65 @@ export default function AdminUsersPage() {
         </button>
       </div>
 
-      {/* Invite sent success banner */}
-      {inviteSentMsg && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-2xl flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-          <span>{inviteSentMsg}</span>
+      {/* User Created with Activation Link Card */}
+      {createdInfo && (
+        <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <p className="text-xs font-bold text-emerald-900">
+                User created for <span className="underline">{createdInfo.email}</span>
+              </p>
+            </div>
+            <button
+              onClick={() => setCreatedInfo(null)}
+              className="text-emerald-700 hover:text-emerald-900 text-xs font-semibold"
+            >
+              Dismiss
+            </button>
+          </div>
+
+          {createdInfo.emailDelivered ? (
+            <p className="text-xs text-emerald-800">
+              ✅ Invitation email dispatched to <strong>{createdInfo.email}</strong>.
+            </p>
+          ) : (
+            <div className="text-xs text-slate-700 bg-white p-3 rounded-xl border border-emerald-200 space-y-2">
+              <div className="flex items-center space-x-2 text-amber-700 font-semibold">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>Direct Activation Link Ready (Sandbox Mode)</span>
+              </div>
+              <p className="text-slate-600 text-[11px]">
+                You can copy this secure activation link to set the password directly or send to the user:
+              </p>
+              {createdInfo.activationUrl && (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={createdInfo.activationUrl}
+                    className="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-mono select-all"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(createdInfo.activationUrl!)}
+                    className="inline-flex items-center space-x-1 bg-slate-900 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-slate-800 transition"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copied ? 'Copied' : 'Copy'}</span>
+                  </button>
+                  <a
+                    href={createdInfo.activationUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2 text-brand-600 hover:bg-brand-50 rounded-lg border border-brand-200"
+                    title="Open activation link in new tab"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -192,60 +284,87 @@ export default function AdminUsersPage() {
                   <th className="px-6 py-3.5">Designation & Department</th>
                   <th className="px-6 py-3.5">Role</th>
                   <th className="px-6 py-3.5">Status</th>
-                  <th className="px-6 py-3.5 text-right">Edit</th>
+                  <th className="px-6 py-3.5">Verification</th>
+                  <th className="px-6 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {usersList.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50 transition">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                          {getInitials(u.name)}
+                {usersList.map((u) => {
+                  const isVerified = u.emailVerified ?? true;
+                  return (
+                    <tr key={u.id} className="hover:bg-slate-50 transition">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                            {getInitials(u.name)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900">{u.name}</p>
+                            <p className="text-[11px] text-slate-500">{u.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-slate-900">{u.name}</p>
-                          <p className="text-[11px] text-slate-500">{u.email}</p>
-                        </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td className="px-6 py-4">
-                      <p className="font-semibold text-slate-800">{u.designation}</p>
-                      <p className="text-[10px] text-slate-500">{u.department?.name || 'Central Administration'}</p>
-                    </td>
+                      <td className="px-6 py-4">
+                        <p className="font-semibold text-slate-800">{u.designation}</p>
+                        <p className="text-[10px] text-slate-500">{u.department?.name || 'Central Administration'}</p>
+                      </td>
 
-                    <td className="px-6 py-4">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                        u.role === 'ADMIN'
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {u.role}
-                      </span>
-                    </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                          u.role === 'ADMIN'
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {u.role}
+                        </span>
+                      </td>
 
-                    <td className="px-6 py-4">
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                        u.status === 'ACTIVE'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-rose-100 text-rose-800'
-                      }`}>
-                        {u.status}
-                      </span>
-                    </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                          u.status === 'ACTIVE'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-rose-100 text-rose-800'
+                        }`}>
+                          {u.status}
+                        </span>
+                      </td>
 
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleOpenEdit(u)}
-                        className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
-                        title="Edit User"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-6 py-4">
+                        {isVerified ? (
+                          <span className="inline-flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                            <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                            <span>Verified</span>
+                          </span>
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <span className="inline-flex items-center space-x-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                              <Clock className="w-3 h-3 text-amber-600" />
+                              <span>Pending</span>
+                            </span>
+                            <button
+                              onClick={() => handleQuickVerify(u.id)}
+                              className="text-[10px] text-brand-600 hover:text-brand-800 font-bold underline"
+                              title="Instantly mark as verified"
+                            >
+                              Activate
+                            </button>
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleOpenEdit(u)}
+                          className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
+                          title="Edit User"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -255,7 +374,7 @@ export default function AdminUsersPage() {
       {/* User Edit / Create Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-sm font-bold text-slate-900">
               {editingUser ? `Edit Account: ${editingUser.name}` : 'Create New User Account'}
             </h2>
@@ -356,20 +475,46 @@ export default function AdminUsersPage() {
                 <div>
                   <label className="block font-bold text-slate-700 mb-2">Account Access Method</label>
                   <div className="space-y-2">
-                    <label className="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
-                      style={{ borderColor: sendInvite ? '#0e8ceb' : '#e2e8f0', background: sendInvite ? '#f0f7ff' : 'white' }}>
-                      <input type="radio" checked={sendInvite} onChange={() => setSendInvite(true)} className="accent-blue-500" />
+                    <label
+                      className="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+                      style={{
+                        borderColor: sendInvite ? '#0e8ceb' : '#e2e8f0',
+                        background: sendInvite ? '#f0f7ff' : 'white',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        checked={sendInvite}
+                        onChange={() => setSendInvite(true)}
+                        className="accent-blue-500"
+                      />
                       <div>
-                        <p className="font-bold text-slate-800">📧 Send Invite Email <span className="text-blue-600 font-bold">(Recommended)</span></p>
-                        <p className="text-slate-500" style={{ fontSize: '11px' }}>User receives an email with a secure link to set their own password</p>
+                        <p className="font-bold text-slate-800">
+                          📧 Send Invite Email / Activation Link <span className="text-blue-600 font-bold">(Recommended)</span>
+                        </p>
+                        <p className="text-slate-500 text-[11px]">
+                          Generates secure activation link allowing the user to set their password
+                        </p>
                       </div>
                     </label>
-                    <label className="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
-                      style={{ borderColor: !sendInvite ? '#0e8ceb' : '#e2e8f0', background: !sendInvite ? '#f0f7ff' : 'white' }}>
-                      <input type="radio" checked={!sendInvite} onChange={() => setSendInvite(false)} className="accent-blue-500" />
+                    <label
+                      className="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+                      style={{
+                        borderColor: !sendInvite ? '#0e8ceb' : '#e2e8f0',
+                        background: !sendInvite ? '#f0f7ff' : 'white',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        checked={!sendInvite}
+                        onChange={() => setSendInvite(false)}
+                        className="accent-blue-500"
+                      />
                       <div>
                         <p className="font-bold text-slate-800">🔐 Set Password Manually</p>
-                        <p className="text-slate-500" style={{ fontSize: '11px' }}>You choose the initial password and share it with the user</p>
+                        <p className="text-slate-500 text-[11px]">
+                          You choose the initial password and share it directly with the user
+                        </p>
                       </div>
                     </label>
                   </div>
@@ -378,7 +523,7 @@ export default function AdminUsersPage() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter initial password"
+                      placeholder="Enter initial password (minimum 8 characters)"
                       className="w-full p-2.5 border border-slate-300 rounded-xl bg-white mt-2"
                       required={!sendInvite}
                     />
@@ -386,17 +531,39 @@ export default function AdminUsersPage() {
                 </div>
               )}
 
-              {/* For existing users: optional password reset */}
+              {/* For existing users: email verification toggle & password reset */}
               {editingUser && (
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Reset Password (leave blank to keep current)</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full p-2.5 border border-slate-300 rounded-xl bg-white"
-                  />
+                <div className="space-y-3 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <div>
+                      <span className="font-bold text-slate-800 block">Email Verification Status</span>
+                      <span className="text-[11px] text-slate-500">Allow login without requiring email verification link</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEmailVerified(!emailVerified)}
+                      className={`px-3 py-1 rounded-lg font-bold text-xs transition ${
+                        emailVerified
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      {emailVerified ? 'Verified' : 'Pending'}
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Reset Password (leave blank to keep current password)
+                    </label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -404,16 +571,16 @@ export default function AdminUsersPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-semibold"
+                  className="px-4 py-2 border border-slate-300 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-md disabled:opacity-50"
+                  className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-sm transition disabled:opacity-50"
                 >
-                  {submitting ? 'Saving...' : 'Save User Account'}
+                  {submitting ? 'Saving...' : editingUser ? 'Update Account' : 'Save & Generate Invite'}
                 </button>
               </div>
             </form>

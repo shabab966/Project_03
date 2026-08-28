@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const userId = params.id;
     const body = await req.json();
-    const { name, designation, departmentId, role, status, password } = body;
+    const { name, designation, departmentId, role, status, password, emailVerified } = body;
 
     const user = await db.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -26,6 +26,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (departmentId !== undefined) updateData.departmentId = departmentId || null;
     if (role && ['ADMIN', 'USER'].includes(role)) updateData.role = role;
     if (status && ['ACTIVE', 'INACTIVE'].includes(status)) updateData.status = status;
+    if (typeof emailVerified === 'boolean') {
+      updateData.emailVerified = emailVerified;
+      if (emailVerified) {
+        updateData.verifyToken = null;
+        updateData.verifyTokenExpiry = null;
+      }
+    }
     if (password) updateData.passwordHash = await hashPassword(password);
 
     const updated = await db.user.update({
@@ -43,6 +50,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       details: {
         role: updated.role,
         status: updated.status,
+        emailVerified: updated.emailVerified,
         department: updated.department?.name,
       },
     });
@@ -56,8 +64,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         status: updated.status,
         designation: updated.designation,
         department: updated.department,
+        emailVerified: updated.emailVerified,
       },
     });
+
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

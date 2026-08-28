@@ -3,8 +3,18 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
+const force = process.argv.includes('--force') || process.env.FORCE_SEED === 'true';
+
 async function main() {
   console.log('🌱 Starting comprehensive database seed for Inter-Office Memo Management System...');
+
+  const orgCount = await prisma.organization.count();
+  if (orgCount > 0 && !force) {
+    console.log(`✅ Database already contains ${orgCount} organization(s). Skipping automatic re-seed to preserve user data.`);
+    return;
+  }
+
+  console.log('🔄 Seeding / resetting database tables...');
 
   // Clear existing database records
   await prisma.auditLog.deleteMany();
@@ -22,6 +32,7 @@ async function main() {
   await prisma.organization.deleteMany();
 
   const defaultPasswordHash = await bcrypt.hash('password123', 10);
+
 
   // ==========================================
   // ORGANIZATION 1: North South University (NSU)

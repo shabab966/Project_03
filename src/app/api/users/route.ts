@@ -85,9 +85,18 @@ export async function POST(req: NextRequest) {
       include: { department: true },
     });
 
-    // Send invite email if requested
+    let emailDelivered = false;
+    let emailWarning: string | null = null;
+    let activationUrl: string | null = null;
+
     if (sendInvite && verifyToken) {
-      await sendInviteEmail({ name: user.name, email: user.email }, verifyToken);
+      const emailRes = await sendInviteEmail({ name: user.name, email: user.email }, verifyToken);
+      emailDelivered = emailRes.success;
+      if (!emailRes.success) {
+        emailWarning = emailRes.error?.message || 'Email delivery limited by provider sandbox mode.';
+      }
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://inter-office-memo-system.onrender.com';
+      activationUrl = `${appUrl}/api/auth/verify-email?token=${verifyToken}`;
     }
 
     await logAuditEvent({
@@ -96,7 +105,7 @@ export async function POST(req: NextRequest) {
       action: 'USER_CREATED',
       entityType: 'USER',
       entityId: user.id,
-      details: { email: user.email, name: user.name, role: user.role, inviteSent: sendInvite },
+      details: { email: user.email, name: user.name, role: user.role, inviteSent: sendInvite, emailDelivered },
     });
 
     return NextResponse.json({
@@ -111,7 +120,11 @@ export async function POST(req: NextRequest) {
         emailVerified: user.emailVerified,
       },
       inviteSent: sendInvite,
+      emailDelivered,
+      emailWarning,
+      activationUrl,
     });
+
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
