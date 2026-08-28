@@ -1,0 +1,115 @@
+# Project Submission Package
+## Inter-Office Memo Management System
+
+- **Course Code**: CSE226
+- **Course Title**: Foundations of Vibe Coding
+- **Institution**: North South University
+- **Semester**: Summer 2026
+- **Submission Deadline**: Midnight, 29 August 2026
+
+---
+
+## 1. Submission Links (As per Section 29)
+
+| Requirement | Description | Submission Link |
+|---|---|---|
+| **A. Deployed Application URL** | Publicly accessible live deployment on Render (HTTPS) | **[https://inter-office-memo-system.onrender.com](https://inter-office-memo-system.onrender.com)** |
+| **B. Project Documentation** | Comprehensive 26-section technical documentation & architecture report | **[`SYSTEM_DOCUMENTATION.md`](file:///c:/Users/assha/OneDrive/Desktop/Cse_226_Project_03/SYSTEM_DOCUMENTATION.md)** / [GitHub Documentation Link](https://github.com/shabab966/Project_03/blob/main/SYSTEM_DOCUMENTATION.md) |
+| **C. Source Code Repository** | Complete Git repository with commit history and setup instructions | **[https://github.com/shabab966/Project_03](https://github.com/shabab966/Project_03)** |
+| **C. Source Code ZIP URL** | Direct download link to complete source code archive | **[https://github.com/shabab966/Project_03/archive/refs/heads/main.zip](https://github.com/shabab966/Project_03/archive/refs/heads/main.zip)** *(Local archive also generated on Desktop)* |
+| **D. AI Prompt & Response History** | Chronological record of vibe-coding prompts, responses, refactorings, and fixes | **[`AI_PROMPT_RESPONSE_HISTORY.md`](file:///c:/Users/assha/OneDrive/Desktop/Cse_226_Project_03/AI_PROMPT_RESPONSE_HISTORY.md)** / [GitHub AI History Link](https://github.com/shabab966/Project_03/blob/main/AI_PROMPT_RESPONSE_HISTORY.md) |
+
+---
+
+## 2. Demonstration Accounts & Credentials (As per Section 23 & 29.E)
+
+All accounts share the default password: **`password123`**
+*(Or use the 1-Click **"Switch Persona (Demo)"** menu in the top navigation bar of the live site)*
+
+### Organization 1: North South University (`NSU`)
+
+| Name | Email Address | Role | Department / Designation |
+|---|---|---|---|
+| **Dr. M. Admin** | `admin@nsu.edu` | **ADMIN** | Central Admin / Chief Information Officer |
+| **Prof. Dr. A. VC** | `vc@nsu.edu` | USER | Executive Office / Vice Chancellor |
+| **Prof. Dr. Rajesh Palit** | `dean.seps@nsu.edu` | USER | ECE Dept / Dean, SEPS |
+| **Dr. Chair ECE** | `chair.ece@nsu.edu` | USER | ECE Dept / Department Chair |
+| **Mr. Finance Director** | `director.finance@nsu.edu` | USER | Finance Office / Director of Finance |
+| **Dr. Alice Faculty** | `alice.faculty@nsu.edu` | USER | CSE Dept / Associate Professor |
+| **Dr. Bob Faculty** | `bob.faculty@nsu.edu` | USER | ECE Dept / Assistant Professor |
+
+### Organization 2: Apex Global Tech (`APEX`) — *Tenant Isolation Proof*
+
+| Name | Email Address | Role | Designation |
+|---|---|---|---|
+| **Sarah Admin** | `admin@apextech.com` | **ADMIN** | Head of Operations |
+| **David CEO** | `david.ceo@apextech.com` | USER | Chief Executive Officer |
+| **Elena VP** | `elena.vp@apextech.com` | USER | VP of Engineering |
+| **Mark Developer** | `mark.dev@apextech.com` | USER | Senior Software Engineer |
+
+---
+
+## 3. Step-by-Step Evaluator Demonstration Scenario (As per Section 28)
+
+Follow these steps on the live application to evaluate all 14 mandatory demonstration milestones:
+
+1. **Log in as Author**:
+   - Go to [https://inter-office-memo-system.onrender.com/login](https://inter-office-memo-system.onrender.com/login)
+   - Click the **"Dr. Alice Faculty"** demo card (or enter `alice.faculty@nsu.edu` / `password123`).
+2. **Create a Multi-Stage Memo**:
+   - Click **"Create Office Memo"** in the sidebar.
+   - Title: `Procurement of High-Performance GPU Cluster for Deep Learning Lab`.
+   - Category: `Procurement` | Priority: `Urgent`.
+   - Workflow: Select **"Procurement Request"** template (Chair ECE $\rightarrow$ Dean SEPS $\rightarrow$ Finance Director $\rightarrow$ Vice Chancellor).
+   - Click **"Submit Office Memo"**.
+3. **Step 1 Review (Chair ECE)**:
+   - Click **"Switch Persona (Demo)"** in the top navbar $\rightarrow$ Select **"Dr. Chair ECE"**.
+   - Navigate to **"Inbox (Action)"** $\rightarrow$ Open the submitted memo.
+   - Click **"Approve & Forward"** with comment: *"Approved from departmental budget perspective."*
+4. **Step 2 Change Request (Dean SEPS)**:
+   - Switch persona to **"Prof. Dr. Rajesh Palit"** (Dean).
+   - Open memo from Inbox $\rightarrow$ Click **"Request Changes"** with comment: *"Please specify exact model specifications (NVIDIA H100 vs A100)."*
+   - Note the status changes to `CHANGES_REQUESTED` and returns to author.
+5. **Revision & Resubmission (Author)**:
+   - Switch persona back to **"Dr. Alice Faculty"**.
+   - Go to **"Sent Memos"** $\rightarrow$ Open the memo $\rightarrow$ Click **"Edit & Resubmit"**.
+   - Update body text with model details $\rightarrow$ Enter change summary: *"Updated to 4x NVIDIA H100 SXM5."* $\rightarrow$ Click **"Resubmit Memo"**.
+   - Notice that **Version 2** is created and the timeline preserves Version 1 history.
+6. **Final Approval Chain**:
+   - Switch to **Dr. Chair ECE** $\rightarrow$ Approve.
+   - Switch to **Prof. Dr. Rajesh Palit** $\rightarrow$ Approve.
+   - Switch to **Mr. Finance Director** $\rightarrow$ Approve.
+   - Switch to **Prof. Dr. A. VC** $\rightarrow$ Final **Approve**.
+   - Note that status is now `APPROVED` with official completion timestamp and read-only mode.
+7. **Delegation Demonstration**:
+   - Switch to **Prof. Dr. Rajesh Palit** $\rightarrow$ Navigate to **"Delegations"**.
+   - Create a delegation granting authority to **"Dr. Bob Faculty"** for the next 7 days.
+   - Switch to **Dr. Bob Faculty** $\rightarrow$ Note the navbar banner: *"Acting as Delegate for: Prof. Dr. Rajesh Palit"*.
+8. **Tenant Isolation Verification**:
+   - Switch persona to **"David CEO"** (Apex Global Tech).
+   - Check Dashboard, Inbox, Sent, Search, and Audit Logs $\rightarrow$ Confirm **0 items** from North South University are visible.
+
+---
+
+## 4. Local Setup Instructions (As per Section 25)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/shabab966/Project_03.git
+cd Project_03
+
+# 2. Install dependencies
+npm install
+
+# 3. Setup environment variables
+cp .env.example .env.local
+
+# 4. Generate Prisma client & initialize database
+npx prisma generate
+npx prisma db push
+node scripts/seed.js
+
+# 5. Start development server
+npm run dev
+# Open http://localhost:3000
+```
