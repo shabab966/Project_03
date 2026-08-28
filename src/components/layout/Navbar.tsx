@@ -16,10 +16,15 @@ import {
   AlertCircle,
   Users,
   Sparkles,
+  Menu,
 } from 'lucide-react';
 import { formatTimeAgo, getInitials } from '../../lib/utils';
 
-export default function Navbar() {
+interface NavbarProps {
+  onToggleMobileMenu?: () => void;
+}
+
+export default function Navbar({ onToggleMobileMenu }: NavbarProps) {
   const { user, logout, demoOrgs, switchDemoUser } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showDemoMenu, setShowDemoMenu] = useState(false);
@@ -105,13 +110,25 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm no-print">
-      <div className="flex items-center justify-between px-4 sm:px-6 py-2.5">
-        {/* Left: Organization Badge & Active Delegation */}
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center bg-slate-900 text-white px-3 py-1.5 rounded-lg shadow-sm">
-            <Building2 className="w-4 h-4 text-brand-400 mr-2 shrink-0" />
-            <span className="font-semibold text-xs sm:text-sm tracking-wide">{user.organization.name}</span>
-            <span className="ml-2 text-[10px] uppercase font-bold bg-brand-500/30 text-brand-300 px-1.5 py-0.5 rounded">
+      <div className="flex items-center justify-between px-3 sm:px-6 py-2.5">
+        {/* Left: Mobile Hamburger & Organization Badge & Active Delegation */}
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+          {/* Mobile Menu Toggle Button */}
+          <button
+            onClick={onToggleMobileMenu}
+            className="lg:hidden p-1.5 sm:p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition shrink-0"
+            aria-label="Open Navigation Menu"
+            title="Open Menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          <div className="flex items-center bg-slate-900 text-white px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-sm truncate">
+            <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-400 mr-1.5 sm:mr-2 shrink-0" />
+            <span className="font-semibold text-xs sm:text-sm tracking-wide truncate max-w-[120px] sm:max-w-none">
+              {user.organization.name}
+            </span>
+            <span className="hidden xs:inline-block ml-2 text-[10px] uppercase font-bold bg-brand-500/30 text-brand-300 px-1.5 py-0.5 rounded shrink-0">
               {user.organization.slug}
             </span>
           </div>
@@ -127,21 +144,22 @@ export default function Navbar() {
         </div>
 
         {/* Right: Demo Persona Quick-Switcher, Notifications & User Profile */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
           {/* Quick Demo Switcher Button */}
           <div className="relative" ref={demoRef}>
             <button
               onClick={() => setShowDemoMenu(!showDemoMenu)}
-              className="flex items-center space-x-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:from-indigo-600 hover:to-purple-700 transition shadow-sm"
+              className="flex items-center space-x-1 sm:space-x-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg hover:from-indigo-600 hover:to-purple-700 transition shadow-sm"
               title="Switch user account for evaluation"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Switch Persona (Demo)</span>
-              <ChevronDown className="w-3.5 h-3.5 ml-0.5" />
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden md:inline">Switch Persona (Demo)</span>
+              <span className="hidden sm:inline md:hidden">Demo</span>
+              <ChevronDown className="w-3.5 h-3.5 ml-0.5 shrink-0" />
             </button>
 
             {showDemoMenu && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50 max-h-[80vh] overflow-y-auto">
+              <div className="absolute right-0 mt-2 w-72 sm:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50 max-h-[80vh] overflow-y-auto">
                 <div className="px-4 py-2 border-b border-slate-100 bg-slate-50">
                   <p className="text-xs font-bold text-slate-800 uppercase tracking-wider">Evaluation Demo Personas</p>
                   <p className="text-[11px] text-slate-500">Instant 1-click switch between accounts & organizations</p>
@@ -197,19 +215,19 @@ export default function Navbar() {
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setShowNotifMenu(!showNotifMenu)}
-              className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
+              className="relative p-1.5 sm:p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
               title="Notifications"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                <span className="absolute top-0.5 sm:top-1 right-0.5 sm:right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
 
             {showNotifMenu && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50">
+              <div className="absolute right-0 mt-2 w-72 sm:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50">
                 <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
                   <div className="flex items-center space-x-1.5">
                     <span className="text-xs font-bold text-slate-900">Notifications</span>

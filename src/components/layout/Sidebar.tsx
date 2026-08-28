@@ -21,9 +21,15 @@ import {
   RotateCcw,
   FileText,
   UserCheck,
+  X,
 } from 'lucide-react';
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
 
@@ -64,11 +70,15 @@ export default function Sidebar() {
     }
   };
 
-  return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 min-h-screen border-r border-slate-800 no-print">
+  const renderContent = (isMobileView = false) => (
+    <div className="flex flex-col h-full">
       {/* Brand Header */}
-      <div className="p-4 border-b border-slate-800">
-        <Link href="/dashboard" className="flex items-center space-x-2.5">
+      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+        <Link
+          href="/dashboard"
+          onClick={() => isMobileView && onClose?.()}
+          className="flex items-center space-x-2.5"
+        >
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
             <FileText className="w-5 h-5" />
           </div>
@@ -77,12 +87,23 @@ export default function Sidebar() {
             <p className="text-[10px] text-slate-400 font-medium">Management System</p>
           </div>
         </Link>
+
+        {isMobileView && (
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition lg:hidden"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* New Memo Primary Action Button */}
       <div className="p-4">
         <Link
           href="/memos/new"
+          onClick={() => isMobileView && onClose?.()}
           className="w-full flex items-center justify-center space-x-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition shadow-sm"
         >
           <PlusCircle className="w-4 h-4" />
@@ -103,6 +124,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => isMobileView && onClose?.()}
               className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition ${
                 isActive
                   ? 'bg-brand-600 text-white font-semibold shadow-sm'
@@ -134,6 +156,7 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => isMobileView && onClose?.()}
                   className={`flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium transition ${
                     isActive
                       ? 'bg-purple-700 text-white font-semibold'
@@ -164,6 +187,32 @@ export default function Sidebar() {
           CSE226 &bull; North South University
         </div>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar (lg and above) */}
+      <aside className="hidden lg:flex w-64 bg-slate-900 text-slate-300 flex-col shrink-0 min-h-screen border-r border-slate-800 no-print">
+        {renderContent(false)}
+      </aside>
+
+      {/* Mobile Drawer (screens below lg) */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+            aria-hidden="true"
+          />
+
+          {/* Drawer panel */}
+          <div className="relative flex flex-col w-72 max-w-[85vw] h-full bg-slate-900 text-slate-300 shadow-2xl z-10 border-r border-slate-800">
+            {renderContent(true)}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
