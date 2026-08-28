@@ -31,8 +31,11 @@ export default function AdminUsersPage() {
   const [departmentId, setDepartmentId] = useState('');
   const [role, setRole] = useState('USER');
   const [status, setStatus] = useState('ACTIVE');
+  const [sendInvite, setSendInvite] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inviteSentMsg, setInviteSentMsg] = useState<string | null>(null);
+
 
   const loadData = async () => {
     try {
@@ -57,12 +60,14 @@ export default function AdminUsersPage() {
     setEditingUser(null);
     setName('');
     setEmail('');
-    setPassword('password123');
+    setPassword('');
     setDesignation('');
     setDepartmentId(departments[0]?.id || '');
     setRole('USER');
     setStatus('ACTIVE');
+    setSendInvite(true);
     setError(null);
+    setInviteSentMsg(null);
     setShowModal(true);
   };
 
@@ -98,7 +103,8 @@ export default function AdminUsersPage() {
 
       if (!editingUser) {
         payload.email = email.trim();
-        payload.password = password;
+        payload.sendInvite = sendInvite;
+        if (!sendInvite && password) payload.password = password;
       } else if (password) {
         payload.password = password;
       }
@@ -114,7 +120,14 @@ export default function AdminUsersPage() {
         throw new Error(d.error || 'Failed to save user');
       }
 
+      const data = await res.json();
       setShowModal(false);
+
+      if (data.inviteSent) {
+        setInviteSentMsg(`✅ Invite email sent to ${email.trim()}! They will set their own password.`);
+        setTimeout(() => setInviteSentMsg(null), 6000);
+      }
+
       loadData();
     } catch (err: any) {
       setError(err.message);
@@ -157,6 +170,14 @@ export default function AdminUsersPage() {
           <span>Add New User</span>
         </button>
       </div>
+
+      {/* Invite sent success banner */}
+      {inviteSentMsg && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-2xl flex items-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+          <span>{inviteSentMsg}</span>
+        </div>
+      )}
 
       {/* Users Table */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
@@ -330,19 +351,54 @@ export default function AdminUsersPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  {editingUser ? 'Reset Password (Leave blank to keep current)' : 'Initial Password *'}
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={editingUser ? '••••••••' : 'password123'}
-                  className="w-full p-2.5 border border-slate-300 rounded-xl bg-white"
-                  required={!editingUser}
-                />
-              </div>
+              {/* For new users: invite toggle or manual password */}
+              {!editingUser && (
+                <div>
+                  <label className="block font-bold text-slate-700 mb-2">Account Access Method</label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+                      style={{ borderColor: sendInvite ? '#0e8ceb' : '#e2e8f0', background: sendInvite ? '#f0f7ff' : 'white' }}>
+                      <input type="radio" checked={sendInvite} onChange={() => setSendInvite(true)} className="accent-blue-500" />
+                      <div>
+                        <p className="font-bold text-slate-800">📧 Send Invite Email <span className="text-blue-600 font-bold">(Recommended)</span></p>
+                        <p className="text-slate-500" style={{ fontSize: '11px' }}>User receives an email with a secure link to set their own password</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+                      style={{ borderColor: !sendInvite ? '#0e8ceb' : '#e2e8f0', background: !sendInvite ? '#f0f7ff' : 'white' }}>
+                      <input type="radio" checked={!sendInvite} onChange={() => setSendInvite(false)} className="accent-blue-500" />
+                      <div>
+                        <p className="font-bold text-slate-800">🔐 Set Password Manually</p>
+                        <p className="text-slate-500" style={{ fontSize: '11px' }}>You choose the initial password and share it with the user</p>
+                      </div>
+                    </label>
+                  </div>
+                  {!sendInvite && (
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter initial password"
+                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white mt-2"
+                      required={!sendInvite}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* For existing users: optional password reset */}
+              {editingUser && (
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Reset Password (leave blank to keep current)</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full p-2.5 border border-slate-300 rounded-xl bg-white"
+                  />
+                </div>
+              )}
 
               <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
                 <button

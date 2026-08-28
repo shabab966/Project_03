@@ -16,6 +16,12 @@ services:
         value: production
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
+      - key: RESEND_API_KEY
+        sync: false   # Set this in Render Dashboard → Environment (never commit API keys)
+      - key: FROM_EMAIL
+        value: onboarding@resend.dev
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://inter-office-memo-system.onrender.com
 
 databases:
   - name: memo-db

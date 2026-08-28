@@ -28,6 +28,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Your account has been deactivated. Please contact your administrator.' }, { status: 403 });
     }
 
+    if (!user.emailVerified) {
+      return NextResponse.json({ error: 'Please verify your email first. Check your inbox for the invitation email.' }, { status: 403 });
+    }
+
     const isMatch = await comparePassword(password, user.passwordHash);
     if (!isMatch) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });

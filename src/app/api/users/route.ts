@@ -3,6 +3,8 @@ import { getAuthSession, hashPassword } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { enforceAdmin, enforceTenant } from '../../../lib/tenant';
 import { logAuditEvent } from '../../../lib/audit';
+import { sendInviteEmail } from '../../../lib/email';
+import { randomBytes } from 'crypto';
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,6 +29,7 @@ export async function GET(req: NextRequest) {
       designation: u.designation,
       avatarUrl: u.avatarUrl,
       department: u.department,
+      emailVerified: u.emailVerified,
       createdAt: u.createdAt,
     }));
 
@@ -43,10 +46,10 @@ export async function POST(req: NextRequest) {
     if (!adminCheck.allowed) return adminCheck.response;
 
     const body = await req.json();
-    const { name, email, password, designation, departmentId, role = 'USER' } = body;
+    const { name, email, password, designation, departmentId, role = 'USER', sendInvite = false } = body;
 
-    if (!name || !email || !password || !designation) {
-      return NextResponse.json({ error: 'Name, email, password, and designation are required' }, { status: 400 });
+    if (!name || !email || !designation) {
+      return NextResponse.json({ error: 'Name, email, and designation are required' }, { status: 400 });
     }
 
     const existing = await db.user.findUnique({
@@ -57,7 +60,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'A user with this email address already exists' }, { status: 400 });
     }
 
-    const passwordHash = await hashPassword(password);
+    // If sending invite, generate a temporary placeholder password
+    const finalPassword = password || randomBytes(16).toString('hex');
+    const passwordHash = await hashPassword(finalPassword);
+
+    // Generate invite token if sending invite email
+    const verifyToken = sendInvite ? randomBytes(32).toString('hex') : null;
+    const verifyTokenExpiry = sendInvite ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null;
 
     const user = await db.user.create({
       data: {
@@ -69,9 +78,17 @@ export async function POST(req: NextRequest) {
         designation: designation.trim(),
         role: role === 'ADMIN' ? 'ADMIN' : 'USER',
         status: 'ACTIVE',
+        emailVerified: !sendInvite, // false if invite sent, they must verify
+        verifyToken,
+        verifyTokenExpiry,
       },
       include: { department: true },
     });
+
+    // Send invite email if requested
+    if (sendInvite && verifyToken) {
+      await sendInviteEmail({ name: user.name, email: user.email }, verifyToken);
+    }
 
     await logAuditEvent({
       organizationId: session!.organizationId,
@@ -79,7 +96,7 @@ export async function POST(req: NextRequest) {
       action: 'USER_CREATED',
       entityType: 'USER',
       entityId: user.id,
-      details: { email: user.email, name: user.name, role: user.role },
+      details: { email: user.email, name: user.name, role: user.role, inviteSent: sendInvite },
     });
 
     return NextResponse.json({
@@ -91,7 +108,9 @@ export async function POST(req: NextRequest) {
         status: user.status,
         designation: user.designation,
         department: user.department,
+        emailVerified: user.emailVerified,
       },
+      inviteSent: sendInvite,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

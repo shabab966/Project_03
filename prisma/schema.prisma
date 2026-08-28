@@ -45,21 +45,26 @@ model Department {
 }
 
 model User {
-  id             String        @id @default(cuid())
-  organizationId String
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  departmentId   String?
-  department     Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  name           String
-  email          String        @unique
-  passwordHash   String
-  designation    String
-  role           String        @default("USER") // "ADMIN" | "USER"
-  status         String        @default("ACTIVE") // "ACTIVE" | "INACTIVE"
-  avatarUrl      String?
-  signatureUrl   String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                  String        @id @default(cuid())
+  organizationId      String
+  organization        Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  departmentId        String?
+  department          Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  name                String
+  email               String        @unique
+  passwordHash        String
+  designation         String
+  role                String        @default("USER") // "ADMIN" | "USER"
+  status              String        @default("ACTIVE") // "ACTIVE" | "INACTIVE"
+  avatarUrl           String?
+  signatureUrl        String?
+  emailVerified       Boolean       @default(true)  // true for seeded/admin-created users
+  verifyToken         String?       @unique
+  verifyTokenExpiry   DateTime?
+  resetToken          String?       @unique
+  resetTokenExpiry    DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   memosAuthored       Memo[]           @relation("MemoAuthor")
   assignedSteps       WorkflowStep[]   @relation("AssignedUser")
