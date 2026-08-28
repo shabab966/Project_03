@@ -22,6 +22,7 @@ import {
   FileText,
   UserCheck,
   X,
+  Layers,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -48,6 +49,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   ];
 
   const adminItems = [
+    { label: 'Multi-Tenant Hub', href: '/admin/organizations', icon: Layers },
     { label: 'Departments', href: '/admin/departments', icon: Building2 },
     { label: 'User Directory', href: '/admin/users', icon: Users },
     { label: 'Memo Categories', href: '/admin/categories', icon: Tags },
@@ -55,6 +57,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     { label: 'Audit Trail', href: '/admin/audit-logs', icon: ShieldCheck },
     { label: 'Reports & Stats', href: '/admin/reports', icon: BarChart3 },
   ];
+
 
   const handleResetSeed = async () => {
     if (confirm('Reset and re-seed the demonstration database to initial state?')) {

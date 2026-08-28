@@ -737,6 +737,144 @@ async function main() {
     },
   });
 
+  // ==========================================
+  // ORGANIZATION 3: Dhaka General Hospital (DGH)
+  // ==========================================
+  console.log('Creating Organization 3: Dhaka General Hospital (DGH)...');
+  const dghOrg = await prisma.organization.create({
+    data: {
+      name: 'Dhaka General Hospital',
+      slug: 'dgh',
+      logoUrl: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=128&auto=format&fit=crop&q=80',
+      contactEmail: 'contact@dgh-hospital.org',
+      contactPhone: '+880-2-9876543',
+      address: 'Plot 12, Gulshan-2, Dhaka-1212, Bangladesh',
+      settingsJson: JSON.stringify({
+        currency: 'BDT',
+        fiscalYear: '2026-2027',
+        allowDelegation: true,
+        strictSequentialWorkflow: true,
+      }),
+    },
+  });
+
+  const dghSurgeryDept = await prisma.department.create({
+    data: {
+      organizationId: dghOrg.id,
+      name: 'Department of Surgery & OT',
+      code: 'SURG',
+      description: 'Surgical suites, operating theaters, and surgical patient care',
+    },
+  });
+
+  const dghICUDept = await prisma.department.create({
+    data: {
+      organizationId: dghOrg.id,
+      name: 'Emergency & Critical Care ICU',
+      code: 'ICU',
+      description: 'Intensive care, trauma resuscitation, and critical life support',
+    },
+  });
+
+  const dghAdmin = await prisma.user.create({
+    data: {
+      organizationId: dghOrg.id,
+      departmentId: dghSurgeryDept.id,
+      name: 'Dr. Robert Admin',
+      email: 'admin@dgh.org',
+      passwordHash: defaultPasswordHash,
+      designation: 'Medical Director & Chief Admin',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      emailVerified: true,
+    },
+  });
+
+  const dghSurgeon = await prisma.user.create({
+    data: {
+      organizationId: dghOrg.id,
+      departmentId: dghSurgeryDept.id,
+      name: 'Dr. Emily Watson',
+      email: 'surgeon@dgh.org',
+      passwordHash: defaultPasswordHash,
+      designation: 'Chief of Surgery',
+      role: 'USER',
+      status: 'ACTIVE',
+      emailVerified: true,
+    },
+  });
+
+  const dghICULead = await prisma.user.create({
+    data: {
+      organizationId: dghOrg.id,
+      departmentId: dghICUDept.id,
+      name: 'Dr. Kevin Vance',
+      email: 'icu@dgh.org',
+      passwordHash: defaultPasswordHash,
+      designation: 'Head of Critical Care Medicine',
+      role: 'USER',
+      status: 'ACTIVE',
+      emailVerified: true,
+    },
+  });
+
+  const dghCatEmergency = await prisma.memoCategory.create({
+    data: {
+      organizationId: dghOrg.id,
+      name: 'Critical Medical Requisition',
+      description: 'Life-saving medical equipment, ICU supplies, and emergency pharmaceuticals',
+    },
+  });
+
+  // DGH Demo Memo (Isolated to DGH tenant)
+  const dghMemo1 = await prisma.memo.create({
+    data: {
+      organizationId: dghOrg.id,
+      referenceNumber: 'DGH-2026-3001',
+      title: 'Emergency Procurement of 5x Advanced High-Flow ICU Ventilators',
+      body: 'Urgent requisition to upgrade Critical Care ICU ventilator capacity ahead of seasonal respiratory admission surge.',
+      authorId: dghICULead.id,
+      departmentId: dghICUDept.id,
+      categoryId: dghCatEmergency.id,
+      priority: 'URGENT',
+      status: 'PENDING_APPROVAL',
+      currentStepIndex: 0,
+      currentAssigneeId: dghSurgeon.id,
+      submittedAt: new Date(),
+    },
+  });
+
+  await prisma.memoVersion.create({
+    data: {
+      memoId: dghMemo1.id,
+      versionNumber: 1,
+      title: dghMemo1.title,
+      body: dghMemo1.body,
+      authorId: dghICULead.id,
+      changeSummary: 'Emergency ICU Requisition',
+    },
+  });
+
+  await prisma.workflowStep.create({
+    data: {
+      memoId: dghMemo1.id,
+      stepOrder: 0,
+      stepType: 'APPROVAL',
+      assignedUserId: dghSurgeon.id,
+      status: 'IN_PROGRESS',
+    },
+  });
+
+  await prisma.workflowStep.create({
+    data: {
+      memoId: dghMemo1.id,
+      stepOrder: 1,
+      stepType: 'APPROVAL',
+      assignedUserId: dghAdmin.id,
+      status: 'PENDING',
+    },
+  });
+
   console.log('✅ Seed completed successfully!');
   console.log('=============================================');
   console.log('DEMO ACCOUNTS READY (Password: "password123"):');
@@ -753,7 +891,12 @@ async function main() {
   console.log('  • CEO: ceo@apex.io');
   console.log('  • VP Engineering: vp.eng@apex.io');
   console.log('  • Staff Dev: john.doe@apex.io');
+  console.log('🏢 Organization 3: Dhaka General Hospital (dgh)');
+  console.log('  • Admin: admin@dgh.org');
+  console.log('  • Chief of Surgery: surgeon@dgh.org');
+  console.log('  • ICU Head: icu@dgh.org');
   console.log('=============================================');
+
 }
 
 main()
