@@ -190,8 +190,24 @@ async function main() {
       designation: 'Associate Professor of CSE',
       role: 'USER',
       status: 'ACTIVE',
+      emailVerified: true,
     },
   });
+
+  const nsuFacultyShabab = await prisma.user.create({
+    data: {
+      organizationId: nsuOrg.id,
+      departmentId: cseDept.id,
+      name: 'Shabab (Real Email Verified)',
+      email: 'tshabab26@gmail.com',
+      passwordHash: defaultPasswordHash,
+      designation: 'Senior Lecturer of CSE',
+      role: 'USER',
+      status: 'ACTIVE',
+      emailVerified: true,
+    },
+  });
+
 
   // NSU Memo Categories
   const catProcurement = await prisma.memoCategory.create({

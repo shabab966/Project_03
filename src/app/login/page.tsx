@@ -12,6 +12,10 @@ import {
   Sparkles,
   CheckCircle2,
   AlertCircle,
+  ExternalLink,
+  Copy,
+  Check,
+  Key,
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -20,11 +24,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [forgotSent, setForgotSent] = useState(false);
+
+  // Forgot password state
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotResult, setForgotResult] = useState<{
+    email: string;
+    emailDelivered?: boolean;
+    resetUrl?: string | null;
+    warning?: string | null;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setForgotResult(null);
     setLoading(true);
 
     const res = await login(email, password);
@@ -34,9 +48,48 @@ export default function LoginPage() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email || !email.includes('@')) {
+      setError('Please enter your email address in the field above to reset your password.');
+      return;
+    }
+
+    setError(null);
+    setForgotLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+
+      const data = await res.json();
+
+      setForgotResult({
+        email: email.trim(),
+        emailDelivered: data.emailDelivered,
+        resetUrl: data.resetUrl,
+        warning: data.emailWarning,
+      });
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   const handleQuickLogin = (demoEmail: string) => {
     setEmail(demoEmail);
     setPassword('password123');
+    setError(null);
+    setForgotResult(null);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
   };
 
   return (
@@ -73,10 +126,52 @@ export default function LoginPage() {
               </div>
             )}
 
-            {forgotSent && (
-              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-start space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span>Password reset instructions dispatched to your email address.</span>
+            {/* Forgot Password Status Banner */}
+            {forgotResult && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 text-slate-800 text-xs rounded-2xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Key className="w-4 h-4 text-brand-600 shrink-0" />
+                    <p className="font-bold text-slate-900">Password Reset Requested</p>
+                  </div>
+                  <button
+                    onClick={() => setForgotResult(null)}
+                    className="text-[11px] text-slate-400 hover:text-slate-700"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+
+                {forgotResult.emailDelivered ? (
+                  <p className="text-emerald-700 font-medium">
+                    ✅ Password reset email dispatched to <strong>{forgotResult.email}</strong>! Please check your inbox or spam folder.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-slate-600 text-[11px]">
+                      {forgotResult.warning || 'Email delivery limited by provider sandbox. Direct reset link generated:'}
+                    </p>
+                    {forgotResult.resetUrl && (
+                      <div className="flex items-center space-x-2 pt-1">
+                        <a
+                          href={forgotResult.resetUrl}
+                          className="inline-flex items-center space-x-1.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm transition"
+                        >
+                          <Key className="w-3.5 h-3.5" />
+                          <span>Reset Password Now &rarr;</span>
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(forgotResult.resetUrl!)}
+                          className="p-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold"
+                          title="Copy reset link"
+                        >
+                          {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -122,10 +217,11 @@ export default function LoginPage() {
               <div className="flex items-center justify-between pt-1">
                 <button
                   type="button"
-                  onClick={() => setForgotSent(true)}
-                  className="text-xs text-brand-600 hover:text-brand-700 font-semibold"
+                  onClick={handleForgotPassword}
+                  disabled={forgotLoading}
+                  className="text-xs text-brand-600 hover:text-brand-700 font-semibold disabled:opacity-50"
                 >
-                  Forgot password?
+                  {forgotLoading ? 'Sending Reset Email...' : 'Forgot password?'}
                 </button>
               </div>
 
@@ -152,98 +248,40 @@ export default function LoginPage() {
               Click any account below to instantly pre-fill credentials (Password: <code className="text-amber-300 font-mono">password123</code>):
             </p>
 
-            <div className="flex-1 space-y-4 overflow-y-auto max-h-[360px] pr-1">
-              {/* Organization 1 */}
-              <div>
-                <div className="flex items-center justify-between text-[11px] font-bold text-brand-400 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1">
-                  <span className="flex items-center">
-                    <Building2 className="w-3.5 h-3.5 mr-1" /> North South University (nsu)
-                  </span>
+            <div className="flex-1 space-y-4 overflow-y-auto max-h-[380px] pr-1">
+              {demoOrgs.map((org) => (
+                <div key={org.id}>
+                  <div className="flex items-center justify-between text-[11px] font-bold text-brand-400 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1">
+                    <span className="flex items-center">
+                      <Building2 className="w-3.5 h-3.5 mr-1" /> {org.name} ({org.slug})
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {org.users.map((u) => {
+                      const isAdmin = u.role === 'ADMIN';
+                      return (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => handleQuickLogin(u.email)}
+                          className={`text-left p-2.5 rounded-xl border transition ${
+                            isAdmin
+                              ? 'bg-purple-900/40 hover:bg-purple-900/60 border-purple-500/50'
+                              : 'bg-slate-700/60 hover:bg-slate-700 border-slate-600'
+                          }`}
+                        >
+                          <div className={`text-xs font-bold ${isAdmin ? 'text-purple-200' : 'text-white'}`}>
+                            {u.name}
+                          </div>
+                          <div className={`text-[10px] truncate ${isAdmin ? 'text-purple-300' : 'text-slate-300'}`}>
+                            {u.designation}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('alice.ece@nsu.edu')}
-                    className="text-left p-2.5 rounded-xl bg-slate-700/60 hover:bg-slate-700 border border-slate-600 transition"
-                  >
-                    <div className="text-xs font-bold text-white">Alice Johnson</div>
-                    <div className="text-[10px] text-slate-300">Faculty ECE (Author)</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('chair.ece@nsu.edu')}
-                    className="text-left p-2.5 rounded-xl bg-slate-700/60 hover:bg-slate-700 border border-slate-600 transition"
-                  >
-                    <div className="text-xs font-bold text-white">Dr. Shazzad Hossein</div>
-                    <div className="text-[10px] text-slate-300">Chair ECE (Reviewer/Delegate)</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('finance@nsu.edu')}
-                    className="text-left p-2.5 rounded-xl bg-slate-700/60 hover:bg-slate-700 border border-slate-600 transition"
-                  >
-                    <div className="text-xs font-bold text-white">Mr. Tanvir Ahmed</div>
-                    <div className="text-[10px] text-slate-300">Director of Finance</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('dean.seps@nsu.edu')}
-                    className="text-left p-2.5 rounded-xl bg-slate-700/60 hover:bg-slate-700 border border-slate-600 transition"
-                  >
-                    <div className="text-xs font-bold text-white">Prof. Dr. Rajesh Palit</div>
-                    <div className="text-[10px] text-slate-300">Dean of SEPS</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('vc@nsu.edu')}
-                    className="text-left p-2.5 rounded-xl bg-slate-700/60 hover:bg-slate-700 border border-slate-600 transition"
-                  >
-                    <div className="text-xs font-bold text-white">Prof. Atiqul Islam</div>
-                    <div className="text-[10px] text-slate-300">Vice Chancellor (Final Approver)</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('admin@nsu.edu')}
-                    className="text-left p-2.5 rounded-xl bg-purple-900/40 hover:bg-purple-900/60 border border-purple-500/50 transition"
-                  >
-                    <div className="text-xs font-bold text-purple-200">Dr. M. Admin</div>
-                    <div className="text-[10px] text-purple-300">Org Admin & IT Director</div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Organization 2 */}
-              <div className="pt-2">
-                <div className="flex items-center justify-between text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1">
-                  <span className="flex items-center">
-                    <Building2 className="w-3.5 h-3.5 mr-1" /> Apex Global Tech (Tenant 2 Isolation)
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('john.doe@apex.io')}
-                    className="text-left p-2.5 rounded-xl bg-slate-700/60 hover:bg-slate-700 border border-slate-600 transition"
-                  >
-                    <div className="text-xs font-bold text-white">John Doe</div>
-                    <div className="text-[10px] text-slate-300">Staff Dev (Author)</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('admin@apex.io')}
-                    className="text-left p-2.5 rounded-xl bg-emerald-900/40 hover:bg-emerald-900/60 border border-emerald-500/50 transition"
-                  >
-                    <div className="text-xs font-bold text-emerald-200">Sarah Connor</div>
-                    <div className="text-[10px] text-emerald-300">Apex Org Admin</div>
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>

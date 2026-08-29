@@ -1,42 +1,57 @@
-// Email sending utility using Resend
-// https://resend.com — free tier: 3,000 emails/month
+function getApiKey(): string | undefined {
+  return process.env.RESEND_API_KEY;
+}
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://inter-office-memo-system.onrender.com';
+function getAppUrl(): string {
+  return process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'production' ? 'https://inter-office-memo-system.onrender.com' : 'http://localhost:3000');
+}
+
+function getFromEmail(): string {
+  return process.env.FROM_EMAIL || 'onboarding@resend.dev';
+}
 
 async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
-  if (!RESEND_API_KEY) {
+  const apiKey = getApiKey();
+  const fromEmail = getFromEmail();
+
+  if (!apiKey) {
     console.warn('[Email] RESEND_API_KEY not set — skipping email send. Would have sent to:', to, 'Subject:', subject);
-    return { success: true, skipped: true };
+    return { success: false, skipped: true, error: { message: 'RESEND_API_KEY is not configured.' } };
   }
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: `Inter-Office Memo System <${FROM_EMAIL}>`,
-      to: [to],
-      subject,
-      html,
-    }),
-  });
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `Inter-Office Memo System <${fromEmail}>`,
+        to: [to],
+        subject,
+        html,
+      }),
+    });
 
-  const data = await response.json();
-  if (!response.ok) {
-    console.error('[Email] Failed to send:', data);
-    return { success: false, error: data };
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('[Email] Failed to send to', to, ':', data);
+      return { success: false, error: data };
+    }
+    console.log('[Email] Dispatched successfully to', to, 'ID:', data.id);
+    return { success: true, data };
+  } catch (err: any) {
+    console.error('[Email] Network error during send:', err);
+    return { success: false, error: { message: err.message } };
   }
-  return { success: true, data };
 }
 
 // ─── Email Templates ──────────────────────────────────────────────────────────
 
 export async function sendInviteEmail(user: { name: string; email: string }, token: string) {
-  const verifyUrl = `${APP_URL}/api/auth/verify-email?token=${token}`;
+  const verifyUrl = `${getAppUrl()}/api/auth/verify-email?token=${token}`;
+
 
   return sendEmail({
     to: user.email,
@@ -81,9 +96,10 @@ export async function sendInviteEmail(user: { name: string; email: string }, tok
 }
 
 export async function sendPasswordResetEmail(user: { name: string; email: string }, token: string) {
-  const resetUrl = `${APP_URL}/reset-password?token=${token}`;
+  const resetUrl = `${getAppUrl()}/reset-password?token=${token}`;
 
   return sendEmail({
+
     to: user.email,
     subject: '🔐 Reset your password',
     html: `

@@ -17,6 +17,10 @@ export async function POST(req: NextRequest) {
       where: { email: email.toLowerCase().trim() },
     });
 
+    let emailDelivered = false;
+    let resetUrl: string | null = null;
+    let emailWarning: string | null = null;
+
     if (user && user.status === 'ACTIVE') {
       // Generate a secure reset token valid for 1 hour
       const resetToken = randomBytes(32).toString('hex');
@@ -27,8 +31,16 @@ export async function POST(req: NextRequest) {
         data: { resetToken, resetTokenExpiry },
       });
 
-      // Send the reset email
-      await sendPasswordResetEmail({ name: user.name, email: user.email }, resetToken);
+      // Send the reset email via Resend
+      const emailRes = await sendPasswordResetEmail({ name: user.name, email: user.email }, resetToken);
+      emailDelivered = emailRes?.success || false;
+
+      if (!emailRes?.success) {
+        emailWarning = emailRes?.error?.message || 'Email delivery limited by provider sandbox mode.';
+      }
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'production' ? 'https://inter-office-memo-system.onrender.com' : 'http://localhost:3000');
+      resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
 
       await logAuditEvent({
         organizationId: user.organizationId,
@@ -36,14 +48,16 @@ export async function POST(req: NextRequest) {
         action: 'PASSWORD_RESET_REQUESTED',
         entityType: 'AUTH',
         entityId: user.id,
-        details: { email: user.email },
+        details: { email: user.email, emailDelivered },
       });
     }
 
-    // Always return the same response for security (don't reveal if email exists)
     return NextResponse.json({
       success: true,
       message: 'If an account matches that email address, password reset instructions have been sent.',
+      emailDelivered,
+      resetUrl,
+      emailWarning,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
