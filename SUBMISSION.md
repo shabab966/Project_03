@@ -125,3 +125,37 @@ node scripts/seed.js
 npm run dev
 # Open http://localhost:3000
 ```
+
+---
+
+## 5. The Vibe-Coding Process (As per Section 26.8)
+
+### 5.1 AI Tools & Environment
+The system was engineered using **Google Antigravity** (powered by Gemini 2.5 Pro and Claude 3.5 Sonnet) operating directly as an autonomous pair-programmer with terminal, filesystem, and code execution tools.
+
+### 5.2 Requirement Communication & Step-by-Step Prompting
+Development was executed through structured architectural prompts rather than monolithic generations:
+1. **Schema & Multi-Tenant Scoping**: Designed Prisma data models with mandatory `organizationId` keys across all entities.
+2. **Deterministic State Machine**: Engineered sequential step transitions ($A \rightarrow B \rightarrow C \rightarrow D$) with turn-based server validation.
+3. **Dual-Datasource Database Portability**: Created `scripts/prepare-db.js` to automatically detect environment and switch between local SQLite (`dev.db`) and Render PostgreSQL (`DATABASE_URL`).
+4. **Email Authentication & Sandbox Fallback**: Integrated Resend API with direct activation links for offline evaluation.
+
+### 5.3 Error Diagnosis & AI-Assisted Debugging
+- **Prisma Datasource Protocol Mismatch**: Fixed runtime error where local SQLite received `postgresql://` validation by building an automatic pre-build datasource switcher.
+- **Mobile Responsive Drawer Layout**: Diagnosed viewport squishing on mobile screens and rebuilt `Sidebar.tsx` into a responsive slide-over drawer with backdrop blur.
+- **Resend Sandbox 403 Delivery Constraint**: Handled sandbox mode restrictions by adding 1-click direct activation and password-reset link cards in the UI.
+
+### 5.4 Verification & Validation
+- Automated full-stack static page compilation (`npm run build`).
+- Automated database migrations and multi-tenant seeding (`node scripts/seed.js`).
+- Complete live end-to-end evaluation scenario walkthrough on Render.
+
+---
+
+## 6. Known Limitations & Technical Compromises (As per Section 26.9)
+
+1. **Email Delivery in Free Sandbox Mode**: Outbound emails via Resend free tier are restricted to the registered developer address (`tshabab26@gmail.com`). To accommodate academic evaluation accounts (`@nsu.edu`), the UI displays instant copyable activation and password-reset links.
+2. **Ephemeral Disk Storage on Free Cloud Dynos**: File attachments are stored locally under `/public/uploads/{orgId}/`. On Render's free tier, local disk files reset when the dyno spins down after 15 minutes of inactivity (Recommended production upgrade: Amazon S3 / Cloudflare R2).
+3. **HTTP State Refresh vs. WebSockets**: Notifications and inbox counts update via route navigation and API refetches rather than persistent WebSocket connections to preserve zero-cost serverless compatibility.
+4. **Single Active Proxy Delegation**: A user can designate one active delegate per date window. Nested or multi-hop delegations ($A \rightarrow B \rightarrow C$) are restricted to prevent circular authorization loops.
+
