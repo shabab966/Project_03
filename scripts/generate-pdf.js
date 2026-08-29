@@ -2,20 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const subMdPath = path.join(__dirname, '..', 'SUBMISSION.md');
-const subHtmlPath = path.join(__dirname, '..', 'SUBMISSION_PREVIEW.html');
-const outPdfDesktop = 'C:\\Users\\assha\\OneDrive\\Desktop\\CSE226_SUBMISSION_PACKAGE.pdf';
-const outPdfRepo = path.join(__dirname, '..', 'SUBMISSION.pdf');
-
-if (!fs.existsSync(subMdPath)) {
-  console.error('SUBMISSION.md not found');
-  process.exit(1);
-}
-
-// Convert markdown to clean HTML
-const mdContent = fs.readFileSync(subMdPath, 'utf8');
-
-// Simple Markdown parser for our structured document
 function parseMarkdown(md) {
   let html = md;
 
@@ -40,7 +26,7 @@ function parseMarkdown(md) {
     const line = lines[i].trim();
     if (line.startsWith('|') && line.endsWith('|')) {
       if (line.includes('---')) {
-        continue; // skip separator
+        continue;
       }
       const cells = line.split('|').filter((_, idx, arr) => idx > 0 && idx < arr.length - 1).map(c => c.trim());
       if (!inTable) {
@@ -66,7 +52,8 @@ function parseMarkdown(md) {
 
   html = newLines.join('\n');
 
-  // Code blocks
+  // Code blocks & Mermaid diagrams
+  html = html.replace(/```mermaid([\s\S]*?)```/gim, '<pre class="code-block mermaid"><code>$1</code></pre>');
   html = html.replace(/```bash([\s\S]*?)```/gim, '<pre class="code-block"><code>$1</code></pre>');
   html = html.replace(/```([\s\S]*?)```/gim, '<pre class="code-block"><code>$1</code></pre>');
 
@@ -83,84 +70,96 @@ function parseMarkdown(md) {
   return html;
 }
 
-const parsedBody = parseMarkdown(mdContent);
+function convertMdToPdf(mdPath, outPdfPath, title) {
+  if (!fs.existsSync(mdPath)) {
+    console.error(`File not found: ${mdPath}`);
+    return;
+  }
 
-const htmlTemplate = `<!DOCTYPE html>
+  const mdContent = fs.readFileSync(mdPath, 'utf8');
+  const parsedBody = parseMarkdown(mdContent);
+
+  const tempHtmlPath = path.join(__dirname, '..', `TEMP_${path.basename(mdPath, '.md')}.html`);
+
+  const htmlTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Project Submission Package - CSE226</title>
+  <title>${title}</title>
   <style>
     @page {
       size: A4;
-      margin: 18mm 15mm 18mm 15mm;
+      margin: 16mm 14mm 16mm 14mm;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: #1e293b;
       line-height: 1.5;
-      font-size: 11pt;
+      font-size: 10.5pt;
       margin: 0;
       padding: 0;
     }
     .header-box {
       border-bottom: 2px solid #0284c7;
       padding-bottom: 12px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
     h1 {
       color: #0f172a;
-      font-size: 20pt;
+      font-size: 18pt;
       margin: 0 0 4px 0;
       font-weight: 800;
       letter-spacing: -0.5px;
     }
     h2 {
       color: #0284c7;
-      font-size: 14pt;
-      margin: 2px 0 10px 0;
+      font-size: 13pt;
+      margin: 14px 0 8px 0;
       font-weight: 700;
+      page-break-after: avoid;
     }
     h3 {
       color: #334155;
-      font-size: 11.5pt;
-      margin: 14px 0 6px 0;
+      font-size: 11pt;
+      margin: 12px 0 6px 0;
       font-weight: 700;
+      page-break-after: avoid;
     }
     p {
-      margin: 6px 0;
+      margin: 5px 0;
     }
     ul, ol {
-      margin: 6px 0;
+      margin: 5px 0;
       padding-left: 20px;
     }
     li {
-      margin: 3px 0;
+      margin: 2.5px 0;
     }
     li.numbered {
       list-style-type: none;
       margin-left: -20px;
-      margin-top: 6px;
+      margin-top: 5px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 10px 0 16px 0;
-      font-size: 9.5pt;
+      margin: 10px 0 14px 0;
+      font-size: 9pt;
+      page-break-inside: avoid;
     }
     th {
       background-color: #f1f5f9;
       color: #475569;
       font-weight: 700;
       text-transform: uppercase;
-      font-size: 8pt;
+      font-size: 7.5pt;
       letter-spacing: 0.5px;
-      padding: 8px 10px;
+      padding: 6px 8px;
       border: 1px solid #cbd5e1;
       text-align: left;
     }
     td {
-      padding: 7px 10px;
+      padding: 6px 8px;
       border: 1px solid #e2e8f0;
       vertical-align: middle;
     }
@@ -171,19 +170,20 @@ const htmlTemplate = `<!DOCTYPE html>
       font-family: "Consolas", "Courier New", monospace;
       background-color: #f1f5f9;
       color: #0f172a;
-      padding: 2px 5px;
+      padding: 1.5px 4px;
       border-radius: 4px;
-      font-size: 9pt;
+      font-size: 8.5pt;
       border: 1px solid #e2e8f0;
     }
     pre.code-block {
       background-color: #0f172a;
       color: #f8fafc;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 9pt;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 8.5pt;
       overflow-x: auto;
-      margin: 8px 0;
+      margin: 6px 0;
+      page-break-inside: avoid;
     }
     pre.code-block code {
       background: none;
@@ -199,22 +199,13 @@ const htmlTemplate = `<!DOCTYPE html>
     hr {
       border: none;
       border-top: 1px solid #e2e8f0;
-      margin: 16px 0;
-    }
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 8pt;
-      font-weight: 700;
-      background: #e0f2fe;
-      color: #0369a1;
+      margin: 14px 0;
     }
     .footer {
-      margin-top: 24px;
-      padding-top: 8px;
+      margin-top: 20px;
+      padding-top: 6px;
       border-top: 1px solid #cbd5e1;
-      font-size: 8pt;
+      font-size: 7.5pt;
       color: #94a3b8;
       text-align: center;
     }
@@ -225,37 +216,57 @@ const htmlTemplate = `<!DOCTYPE html>
     ${parsedBody}
   </div>
   <div class="footer">
-    Inter-Office Memo Management System &bull; CSE226 North South University &bull; Official Submission Document
+    Inter-Office Memo Management System &bull; CSE226 North South University &bull; Official Document
   </div>
 </body>
 </html>`;
 
-fs.writeFileSync(subHtmlPath, htmlTemplate, 'utf8');
-console.log('Generated SUBMISSION_PREVIEW.html');
+  fs.writeFileSync(tempHtmlPath, htmlTemplate, 'utf8');
 
-// Try finding Edge or Chrome to print PDF
-const edgePaths = [
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
-];
+  const edgePaths = [
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+  ];
 
-let browserPath = edgePaths.find(p => fs.existsSync(p));
+  let browserPath = edgePaths.find(p => fs.existsSync(p));
 
-if (browserPath) {
-  console.log(`Using browser at: ${browserPath}`);
-  const commandDesktop = `"${browserPath}" --headless --disable-gpu --run-all-compositor-stages-before-draw --print-to-pdf="${outPdfDesktop}" "${subHtmlPath}"`;
-  const commandRepo = `"${browserPath}" --headless --disable-gpu --run-all-compositor-stages-before-draw --print-to-pdf="${outPdfRepo}" "${subHtmlPath}"`;
-  
-  try {
-    execSync(commandDesktop);
-    execSync(commandRepo);
-    console.log(`✅ PDF successfully generated at: ${outPdfDesktop}`);
-    console.log(`✅ PDF successfully generated at: ${outPdfRepo}`);
-  } catch (err) {
-    console.error('Failed to run headless PDF generation:', err);
+  if (browserPath) {
+    const cmd = `"${browserPath}" --headless --disable-gpu --run-all-compositor-stages-before-draw --print-to-pdf="${outPdfPath}" "${tempHtmlPath}"`;
+    try {
+      execSync(cmd);
+      console.log(`✅ Generated PDF: ${outPdfPath}`);
+    } catch (err) {
+      console.error(`Failed generating ${outPdfPath}:`, err);
+    }
   }
-} else {
-  console.log('No headless browser found. HTML file is ready for manual print.');
+
+  if (fs.existsSync(tempHtmlPath)) {
+    fs.unlinkSync(tempHtmlPath);
+  }
 }
+
+// 1. Generate SUBMISSION.pdf
+convertMdToPdf(
+  path.join(__dirname, '..', 'SUBMISSION.md'),
+  'C:\\Users\\assha\\OneDrive\\Desktop\\CSE226_SUBMISSION_PACKAGE.pdf',
+  'Project Submission Package'
+);
+convertMdToPdf(
+  path.join(__dirname, '..', 'SUBMISSION.md'),
+  path.join(__dirname, '..', 'SUBMISSION.pdf'),
+  'Project Submission Package'
+);
+
+// 2. Generate PRD.pdf
+convertMdToPdf(
+  path.join(__dirname, '..', 'PRODUCT_REQUIREMENTS_DOCUMENT.md'),
+  'C:\\Users\\assha\\OneDrive\\Desktop\\CSE226_PRD.pdf',
+  'Product Requirements Document (PRD)'
+);
+convertMdToPdf(
+  path.join(__dirname, '..', 'PRODUCT_REQUIREMENTS_DOCUMENT.md'),
+  path.join(__dirname, '..', 'PRODUCT_REQUIREMENTS_DOCUMENT.pdf'),
+  'Product Requirements Document (PRD)'
+);
