@@ -1,11 +1,14 @@
 # Project Submission Package
 ## Inter-Office Memo Management System
 
+- **Student Name**: Al Shabab
+- **Student ID**: 2523255630
 - **Course Code**: CSE226
 - **Course Title**: Foundations of Vibe Coding
 - **Institution**: North South University
 - **Semester**: Summer 2026
 - **Submission Deadline**: Midnight, 29 August 2026
+
 
 ---
 

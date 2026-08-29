@@ -1,11 +1,14 @@
 # Inter-Office Memo Management System
 ## Comprehensive System & Technical Documentation
 
+- **Student Name**: Al Shabab
+- **Student ID**: 2523255630
 - **Course Code**: CSE226
 - **Course Title**: Foundations of Vibe Coding
 - **Department**: Electrical and Computer Engineering
 - **Institution**: North South University
 - **Semester**: Summer 2026
+
 
 ---
 
