@@ -42,10 +42,19 @@ All accounts share the default password: **`password123`**
 
 | Name | Email Address | Role | Designation |
 |---|---|---|---|
-| **Sarah Admin** | `admin@apextech.com` | **ADMIN** | Head of Operations |
-| **David CEO** | `david.ceo@apextech.com` | USER | Chief Executive Officer |
-| **Elena VP** | `elena.vp@apextech.com` | USER | VP of Engineering |
-| **Mark Developer** | `mark.dev@apextech.com` | USER | Senior Software Engineer |
+| **Sarah Admin** | `admin@apex.io` | **ADMIN** | Head of Operations |
+| **David CEO** | `ceo@apex.io` | USER | Chief Executive Officer |
+| **Elena VP** | `vp.eng@apex.io` | USER | VP of Engineering |
+| **John Developer** | `john.doe@apex.io` | USER | Staff Software Architect |
+
+### Organization 3: Dhaka General Hospital (`DGH`) — *Multi-Tenant Scalability Proof*
+
+| Name | Email Address | Role | Designation |
+|---|---|---|---|
+| **Dr. Robert Admin** | `admin@dgh.org` | **ADMIN** | Medical Director & Chief Admin |
+| **Dr. Emily Watson** | `surgeon@dgh.org` | USER | Chief of Surgery |
+| **Dr. Kevin Vance** | `icu@dgh.org` | USER | Head of Critical Care Medicine |
+
 
 ---
 
