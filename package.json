@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
+    "dev": "node scripts/prepare-db.js && next dev",
+    "build": "node scripts/prepare-db.js && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
+    "prisma:generate": "node scripts/prepare-db.js && prisma generate",
+    "prisma:push": "node scripts/prepare-db.js && prisma db push",
     "db:seed": "node scripts/seed.js"
   },
+
   "dependencies": {
     "@prisma/client": "^5.19.1",
     "@types/bcryptjs": "^2.4.6",
